@@ -1,10 +1,14 @@
 class UnOp(object):
     def __init__(self, op1):
+        self.op = self.__class__.__name__
+        self.op_type = self.__class__.__bases__[0].__name__
         self.op1 = op1
 
-class BinOp(UnOp):
+class BinOp(object):
     def __init__(self, op1, op2):
-        UnOp.__init__(self, op1)
+        self.op = self.__class__.__name__
+        self.op_type = self.__class__.__bases__[0].__name__
+        self.op1 = op1
         self.op2 = op2
 
 
@@ -56,12 +60,6 @@ class Graph(object):
     def __init__(self, graph):
         self.__graph = graph
 
-    def __op(self, obj):
-        return obj.__class__.__name__
-
-    def __type(self, obj):
-        return obj.__class__.__bases__[0].__name__
-
     def __print_indented(self, indent, text):
         print('  ' * indent + text)
 
@@ -69,47 +67,47 @@ class Graph(object):
         print('Result: {}'.format(self.__graph.eval()))
 
     def print_graph(self, graph=None, level=0):
-        if level == 0:
+        if graph == None:
             graph = self.__graph
-        if self.__op(graph) != 'Num':
-            self.__print_indented(level, self.__op(graph))
-        if self.__type(graph) == 'UnOp':
-            if self.__op(graph) == 'Num':
+        if graph.op != 'Num':
+            self.__print_indented(level, graph.op)
+        if graph.op_type == 'UnOp':
+            if graph.op == 'Num':
                 self.__print_indented(level, str(graph.op1))
             else:
                 self.print_graph(graph.op1, level+1)
-        if self.__type(graph) == 'BinOp':
+        if graph.op_type == 'BinOp':
             self.print_graph(graph.op1, level+1)
             self.print_graph(graph.op2, level+1)
 
     def reduce_neg(self, graph=None):
         if graph == None:
             graph = self.__graph
-        if self.__type(graph) == 'UnOp':
-            if self.__op(graph) == 'Neg': 
-                if self.__op(graph.op1) == 'Num':
+        if graph.op_type == 'UnOp':
+            if graph.op == 'Neg': 
+                if graph.op1.op == 'Num':
                     print('1')
-                    graph = Num(-1.0 * graph.op1.op1) 
+                    print -1.0 * graph.op1.op1
+                    return Num(-1.0 * graph.op1.op1) 
                 else:
                     print('2a')
-                    graph = Neg(self.reduce_neg(graph.op1))
-            if self.__op(graph) == 'Num':
+                    return Neg(self.reduce_neg(graph.op1))
+            if graph.op == 'Num':
                 print('2b')
-                graph = Num(graph.op1)
-        if self.__type(graph) == 'BinOp':
-            if self.__op(graph) == 'Add':
+                return Num(graph.op1)
+        if graph.op_type == 'BinOp':
+            if graph.op == 'Add':
                 print('3')
-                graph = Add(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-            if self.__op(graph) == 'Sub':
+                return Add(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
+            if graph.op == 'Sub':
                 print('4')
-                graph = Sub(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-            if self.__op(graph) == 'Mul':
+                return Sub(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
+            if graph.op == 'Mul':
                 print('5')
-                graph = Mul(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-            if self.__op(graph) == 'Div':
+                return Mul(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
+            if graph.op == 'Div':
                 print('6')
-                graph = Div(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-        return graph
+                return Div(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
         
 
         
@@ -145,9 +143,9 @@ math = Add(
     )
 )
 
-g = Graph(math)
-g.print_graph()
-g.eval()
+#g = Graph(math)
+#g.print_graph()
+#g.eval()
 
 
 
