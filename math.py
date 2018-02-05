@@ -60,56 +60,62 @@ class Graph(object):
     def __init__(self, graph):
         self.__graph = graph
 
-    def __print_indented(self, indent, text):
-        print('  ' * indent + text)
-
     def eval(self):
         print('Result: {}'.format(self.__graph.eval()))
 
-    def print_graph(self, graph=None, level=0):
-        if graph == None:
-            graph = self.__graph
+    def __pprint(self, graph, level):
         if graph.op != 'Num':
-            self.__print_indented(level, graph.op)
+            print('  ' * level + graph.op)
         if graph.op_type == 'UnOp':
             if graph.op == 'Num':
-                self.__print_indented(level, str(graph.op1))
+                print('  ' * level + str(graph.op1))
             else:
-                self.print_graph(graph.op1, level+1)
+                self.__pprint(graph.op1, level+1)
         if graph.op_type == 'BinOp':
-            self.print_graph(graph.op1, level+1)
-            self.print_graph(graph.op2, level+1)
+            self.__pprint(graph.op1, level+1)
+            self.__pprint(graph.op2, level+1)
 
-    def reduce_neg(self, graph=None):
-        if graph == None:
-            graph = self.__graph
+    def pprint(self):
+        self.__pprint(self.__graph, 0)
+
+    def __obj(self, obj, *args):
+        return type(obj)(*args)
+
+    def __reduce_neg(self, graph):
         if graph.op_type == 'UnOp':
             if graph.op == 'Neg': 
                 if graph.op1.op == 'Num':
-                    print('1')
-                    print -1.0 * graph.op1.op1
-                    return Num(-1.0 * graph.op1.op1) 
+                    return self.__obj(graph.op1, -graph.op1.op1)
                 else:
-                    print('2a')
-                    return Neg(self.reduce_neg(graph.op1))
+                    return Neg(self.__obj(graph, self.__reduce_neg(graph.op1)))
             if graph.op == 'Num':
-                print('2b')
                 return Num(graph.op1)
         if graph.op_type == 'BinOp':
-            if graph.op == 'Add':
-                print('3')
-                return Add(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-            if graph.op == 'Sub':
-                print('4')
-                return Sub(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-            if graph.op == 'Mul':
-                print('5')
-                return Mul(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-            if graph.op == 'Div':
-                print('6')
-                return Div(self.reduce_neg(graph.op1), self.reduce_neg(graph.op2))
-        
+            return self.__obj(graph, self.__reduce_neg(graph.op1), self.__reduce_neg(graph.op2))
+       
+    def reduce_neg(self):
+        self.__graph = self.__reduce_neg(self.__graph)
 
+    def __reduce_add(self, graph):
+        if graph.op_type == 'UnOp':
+            return self.__obj(graph, self.__reduce_add(graph.op1))
+        if graph.op_type == 'BinOp':
+            if graph.op == 'Add':
+                if graph.op1.op == 'Num' and graph.op2.op == 'Num':
+                    return Num(graph.op1.op1 + graph.op2.op1)
+                if graph.op1.op == 'Num':
+                    return self.__obj(graph, Num(graph.op1.op), self.__reduce_add(graph.op2))
+                if graph.op2.op == 'Num':
+                    return self.__obj(graph, self.__reduce_add(graph.op1), Num(graph.op2.op)) 
+                else:
+                    return self.__obj(graph, self.__reduce_add(graph.op1), self.__reduce_add(graph.op2))
+            else:
+                return self.__obj(graph, self.__reduce_add(graph.op1), self.__reduce_add(graph.op2))
+
+    def reduce_add(self):
+        self.__graph = self.__reduce_add(self.__graph)
+
+ 
         
 '''
     def reduce_adds(self, graph=None):
@@ -125,7 +131,6 @@ class Graph(object):
         else:
             return graph
 '''
-
 
 
 # Random case for printing
@@ -144,7 +149,7 @@ math = Add(
 )
 
 #g = Graph(math)
-#g.print_graph()
+#g.pprint()
 #g.eval()
 
 
@@ -152,11 +157,18 @@ math = Add(
 # Test of reducing addition
 math = Add(
     Neg(Num(5.0)),
-    Num(2.0)
+    Add(
+        Num(2.0),
+        Num(-4.0)
+    )
 )
 
 g = Graph(math)
-g.print_graph()
+g.pprint()
 g.reduce_neg()
-g.print_graph()
+g.pprint()
+g.reduce_add()
+g.pprint()
+
+
 
