@@ -1,8 +1,6 @@
-from src.graph.graph import Graph
-from src.ops.add     import Add
-from src.ops.mul     import Mul
-from src.ops.num     import Num
-from src.ops.neg     import Neg
+from src.ops.scalar import Num, Neg, Add, Mul
+from src.graph.base import Graph
+
 
 math = Add(
     Mul(
@@ -17,8 +15,17 @@ math = Add(
         Num(3.0)
     )
 )
-
 g = Graph(math)
-g.print_graph()
+g.pprint()
 g.eval()
+
+
+math = Add(
+    Neg(Num(2.0)),
+    Num(-3.0)
+)
+g = Graph(math)
+g.pprint()
+g.reduce_neg()
+g.pprint()
 

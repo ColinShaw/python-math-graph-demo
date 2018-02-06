@@ -61,7 +61,7 @@ class Graph(object):
         self.__graph = graph
 
     def eval(self):
-        print('Result: {}'.format(self.__graph.eval()))
+        print('Eval: {}'.format(self.__graph.eval()))
 
     def __pprint(self, graph, level):
         if graph.op != 'Num':
